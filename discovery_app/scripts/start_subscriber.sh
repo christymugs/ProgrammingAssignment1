@@ -1,0 +1,1 @@
+python3 SubscriberAppIn.py --topic "weather"
