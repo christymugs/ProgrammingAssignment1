@@ -1,6 +1,7 @@
 import zmq
 import json
 import time
+import logging
 
 # Command-line arguments
 import argparse
@@ -17,6 +18,11 @@ context = zmq.Context()
 discovery_socket = context.socket(zmq.REQ)
 discovery_socket.connect(args.discovery_address)
 
+#### LOGGGING CONFIG
+logger = logging.getLogger("PublisherAppIn")
+logging.basicConfig(filename='logs/application.log',level=logging.DEBUG,format='%(asctime)s %(levelname)-8s PublicsherAppIn: %(message)s')
+logger.info("Starting up")
+
 # Register the publisher with the discovery service
 def register_publisher():
     message = {
@@ -27,7 +33,8 @@ def register_publisher():
     }
     discovery_socket.send_json(message)
     response = discovery_socket.recv_json()
-    print(f"Publisher registered: {response}")
+    logger.info(f"Publisher registered: {response}")
+    #print(f"Publisher registered: {response}")
 
 # Publisher socket to send messages
 publisher_socket = context.socket(zmq.PUB)
@@ -38,7 +45,8 @@ def publish_messages():
     while True:
         message = f"Message from publisher on topic {args.topic}"
         publisher_socket.send_string(f"{args.topic} {message}")
-        print(f"Published: {message}")
+        logger.info(f"Published: {message}")
+        #print(f"Published: {message}")
         time.sleep(1)
 
 # Main loop

@@ -1,6 +1,7 @@
 import zmq
 import json
 import time
+import logging
 
 # Command-line arguments
 import argparse
@@ -16,6 +17,11 @@ context = zmq.Context()
 discovery_socket = context.socket(zmq.REQ)
 discovery_socket.connect(args.discovery_address)
 
+#### LOGGGING CONFIG
+logger = logging.getLogger("SubscriberAppIn")
+logging.basicConfig(filename='logs/application.log',level=logging.DEBUG,format='%(asctime)s %(levelname)-8s SubscriberAppIn: %(message)s')
+logger.info("Starting up")
+
 # Function to query discovery for the publisher's address
 def lookup_publisher():
     message = {
@@ -27,7 +33,8 @@ def lookup_publisher():
     if response['status'] == 'found':
         return response['address']
     else:
-        print(f"No publisher found for topic {args.topic}")
+        logger.warning(f"No publisher found for topic {args.topic}")
+        #print(f"No publisher found for topic {args.topic}")
         return None
 
 # Subscribe to the topic from the publisher
@@ -38,10 +45,14 @@ def subscribe_to_topic(publisher_address):
     
     while True:
         message = subscriber_socket.recv_string()
-        print(f"Received: {message}")
+        logger.info(f"Received: {message}")
+        #print(f"Received: {message}")
 
 # Main loop
 if __name__ == '__main__':
     publisher_address = lookup_publisher()
+    while publisher_address is None:
+        time.sleep(1)
+        publisher_address = lookup_publisher()
     if publisher_address:
         subscribe_to_topic(publisher_address)

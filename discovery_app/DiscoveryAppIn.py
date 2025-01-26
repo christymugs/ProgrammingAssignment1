@@ -42,6 +42,7 @@
 import argparse
 import zmq
 import json
+import logging
 
 # This is left as an exercise for the student. The Discovery service is a server
 # and hence only responds to requests. It should be able to handle the register,
@@ -83,6 +84,13 @@ discovery_socket.bind(BIND_ADDRESS)
 # Data structure to store registered publishers and subscribers
 # This registry will store the addresses of publishers and subscribers for each topic
 registry = {'publishers': {}, 'subscribers': {}}
+
+
+#### LOGGGING CONFIG
+logger = logging.getLogger("DiscoveryAppIn")
+logging.basicConfig(filename='logs/application.log',level=logging.DEBUG,format='%(asctime)s %(levelname)-8s DiscoveryAppIn: %(message)s')
+logger.info("Starting up")
+
 
 def handle_register(message):
     """
@@ -145,14 +153,16 @@ while True:
     try:
         # Receive the message from the client
         message = discovery_socket.recv_json()
-        print(f"Received message: {message}")  # Log the incoming message
+        logger.info(f"Received message: {message}")
+        #print(f"Received message: {message}")  # Log the incoming message
 
         msg_type = message.get('type')  # Extract the type of request
         
         # Handle the different message types: register, is_ready, lookup
         if msg_type == 'register':
             response = handle_register(message)
-            print(f"Registry after registration: {registry}")  # Log the updated registry
+            logger.info(f"Registry after registration: {registry}")  # Log the updated registry
+            #print(f"Registry after registration: {registry}")  # Log the updated registry
         elif msg_type == 'is_ready':
             response = handle_is_ready()
         elif msg_type == 'lookup':
@@ -165,6 +175,8 @@ while True:
         discovery_socket.send_json(response)
     
     except zmq.ZMQError as e:
-        print(f"ZMQError occurred: {e}")
+        logger.error(f"ZMQError occurred: {e}")
+        #print(f"ZMQError occurred: {e}")
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
+        #print(f"An error occurred: {e}")
